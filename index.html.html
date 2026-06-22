@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AtabeyGame.io - Mini Oyunlar Portalı</title>
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/5260/5260498.png">
+  <meta property="og:title" content="AtabeyGame.io - Mini Oyunlar">
+<meta property="og:description" content="Atabəyin hazırladığı ilan və X-O mini oyunlar portalı. Daxil ol və oyna!">
+<meta property="og:image" content="https://cdn-icons-png.flaticon.com/512/5260/5260498.png">
+<meta property="og:type" content="website">  <style>
+        /* Ümumi Sayt Dizaynı */
+        body {
+            background-color: #0f0f13;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* YUXARI PANEL (OYUN KONSOLU) */
+        .top-navbar {
+            height: 60px;
+            background-color: #16161f;
+            border-bottom: 3px solid #00ffcc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(0, 255, 204, 0.2);
+            z-index: 10;
+            flex-shrink: 0;
+        }
+
+        .top-navbar h1 {
+            margin: 0;
+            font-size: 26px;
+            color: #00ffcc;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+        }
+
+        /* Əsas Paylaşım Sahəsi */
+        .app-container {
+            display: flex;
+            flex-grow: 1;
+            height: calc(100vh - 60px);
+        }
+
+        /* Sol Tərəf: Oyun Seçmə Menyusu */
+        .sidebar {
+            width: 250px;
+            background-color: #16161f;
+            border-right: 3px solid #00ffcc;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+            flex-shrink: 0;
+        }
+
+        .sidebar h2 {
+            color: #ffffff;
+            font-size: 18px;
+            text-align: center;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .menu-btn {
+            background-color: #222230;
+            color: #ffffff;
+            border: 2px solid transparent;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 8px;
+            text-align: left;
+            transition: all 0.3s ease;
+        }
+
+        .menu-btn:hover {
+            background-color: #00ffcc;
+            color: #000000;
+            transform: translateX(5px);
+        }
+
+        .menu-btn.active {
+            border-color: #00ffcc;
+            background-color: #00ffcc;
+            color: #000000;
+        }
+
+        /* Sağ Tərəf: Oyun Sahəsi */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            position: relative;
+            background-color: #0f0f13;
+            overflow-y: auto;
+        }
+
+        .game-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            background-color: #16161f;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 0 25px rgba(0, 255, 204, 0.15);
+            position: relative;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        .game-screen.active {
+            display: flex;
+        }
+
+        /* === İLAN OYUNU ELEMENTLƏRİ === */
+        .canvas-container {
+            position: relative;
+        }
+
+        canvas {
+            background-color: #000000;
+            border: 2px solid #333;
+            border-radius: 6px;
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .game-over-overlay {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #ff4444;
+            font-size: 32px;
+            font-weight: bold;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            letter-spacing: 2px;
+        }
+
+        .score-board {
+            font-size: 20px;
+            margin-top: 10px;
+            color: #ffcc00;
+            font-weight: bold;
+        }
+
+        .control-btn {
+            background-color: #00ffcc;
+            color: black;
+            border: none;
+            padding: 10px 20px;
+            margin-top: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 16px;
+            transition: 0.2s;
+        }
+
+        /* TELEFON ÜÇÜN VIRTUAL DÜYMƏLƏR (STANDART OLARAQ GİZLİ) */
+        .mobile-controls {
+            display: none;
+            grid-template-columns: repeat(3, 60px);
+            grid-template-rows: repeat(2, 50px);
+            gap: 8px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+
+        .joy-btn {
+            background-color: #222230;
+            color: #00ffcc;
+            border: 2px solid #00ffcc;
+            border-radius: 8px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+
+        .joy-btn:active {
+            background-color: #00ffcc;
+            color: black;
+        }
+
+        /* === TIC-TAC-TOE (X-O) ELEMENTLƏRİ === */
+        .mode-selection {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .mode-btn {
+            background-color: #222230;
+            color: white;
+            border: 2px solid #00ffcc;
+            padding: 10px 15px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: 0.2s;
+        }
+
+        .mode-btn:hover, .mode-btn.active {
+            background-color: #00ffcc;
+            color: black;
+        }
+
+        .xo-board {
+            display: grid;
+            grid-template-columns: repeat(3, min(90px, 25vw));
+            grid-template-rows: repeat(3, min(90px, 25vw));
+            gap: 5px;
+            background-color: #333;
+            padding: 5px;
+            border-radius: 8px;
+        }
+
+        .xo-cell {
+            background-color: #000000;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .xo-cell.X { color: #00ffcc; }
+        .xo-cell.O { color: #ff4444; }
+
+        .status-text {
+            font-size: 18px;
+            margin-top: 15px;
+            color: #ffcc00;
+            font-weight: bold;
+        }
+
+        /* RESPONSIVE: TELEFON VƏ PLANŞET REJİMİ */
+        @media (max-width: 768px) {
+            body {
+                overflow-y: auto;
+            }
+            .app-container {
+                flex-direction: column;
+                height: auto;
+            }
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 3px solid #00ffcc;
+                flex-direction: row;
+                overflow-x: auto;
+                padding: 10px;
+                gap: 10px;
+            }
+            .sidebar h2 { display: none; }
+            .menu-btn {
+                margin-bottom: 0;
+                white-space: nowrap;
+                padding: 10px;
+                font-size: 14px;
+            }
+            canvas {
+                width: min(320px, 85vw);
+                height: min(320px, 85vw);
+            }
+            .mobile-controls {
+                display: grid; /* Telefonda düymələri göstər */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-navbar">
+        <h1>AtabeyGame.io</h1>
+    </div>
+
+    <div class="app-container">
+        <div class="sidebar">
+            <h2>Oyun Menenjeri</h2>
+            <button class="menu-btn active" onclick="selectGame('snake-game', this)">🐍 İlan Oyunu</button>
+            <button class="menu-btn" onclick="selectGame('xo-game', this)">❌ Tic-Tac-Toe (X-O)</button>
+            <button class="menu-btn" onclick="selectGame('tba-game', this)">➕ Tezliklə...</button>
+        </div>
+
+        <div class="main-content">
+            
+            <div id="snake-game" class="game-screen active">
+                <h3 style="color: #00ffcc; margin-top: 0; margin-bottom: 5px; font-size: 18px;">Klassik İlan Oyunu</h3>
+                <div class="canvas-container">
+                    <canvas id="gameCanvas" width="400" height="400"></canvas>
+                    <div id="gameOverScreen" class="game-over-overlay">OYUN BİTDİ!</div>
+                </div>
+                <div class="score-board">Xal: <span id="score">0</span></div>
+                <button class="control-btn" onclick="resetSnakeGame()">Yenidən Başla</button>
+
+                <div class="mobile-controls">
+                    <div></div>
+                    <button class="joy-btn" onclick="handleJoystick(38)">▲</button>
+                    <div></div>
+                    <button class="joy-btn" onclick="handleJoystick(37)">◀</button>
+                    <button class="joy-btn" onclick="handleJoystick(40)">▼</button>
+                    <button class="joy-btn" onclick="handleJoystick(39)">▶</button>
+                </div>
+            </div>
+
+            <div id="xo-game" class="game-screen">
+                <h3 style="color: #00ffcc; margin-top: 0; margin-bottom: 10px;">Tic-Tac-Toe (X-O)</h3>
+                <div class="mode-selection">
+                    <button id="btn-p2p" class="mode-btn active" onclick="setXOMode('2p')">2 Nəfərlik</button>
+                    <button id="btn-bot" class="mode-btn" onclick="setXOMode('bot')">Bot ilə Yarış</button>
+                </div>
+                <div class="xo-board">
+                    <div class="xo-cell" onclick="handleXOClick(0)"></div>
+                    <div class="xo-cell" onclick="handleXOClick(1)"></div>
+                    <div class="xo-cell" onclick="handleXOClick(2)"></div>
+                    <div class="xo-cell" onclick="handleXOClick(3)"></div>
+                    <div class="xo-cell" onclick="handleXOClick(4)"></div>
+                    <div class="xo-cell" onclick="handleXOClick(5)"></div>
+                    <div class="xo-cell" onclick="handleXOClick(6)"></div>
+                    <div class="xo-cell" onclick="handleXOClick(7)"></div>
+                    <div class="xo-cell" onclick="handleXOClick(8)"></div>
+                </div>
+                <div id="xo-status" class="status-text">Növbə: X</div>
+                <button class="control-btn" onclick="resetXOGame()">Yenidən Başla</button>
+            </div>
+
+            <div id="tba-game" class="game-screen">
+                <h3 style="color: #00ffcc; margin-top: 0;">Yeni Oyun</h3>
+                <p class="placeholder-text">Tezliklə...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // === OYUN SEÇMƏ SİSTEMİ ===
+        let isGameOver = false;
+
+        function selectGame(gameId, buttonElement) {
+            const screens = document.querySelectorAll('.game-screen');
+            screens.forEach(screen => screen.classList.remove('active'));
+
+            const buttons = document.querySelectorAll('.menu-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            document.getElementById(gameId).classList.add('active');
+            buttonElement.classList.add('active');
+
+            if (gameId === 'snake-game') {
+                if (!isGameOver) startSnakeGame();
+            } else {
+                stopSnakeGame();
+            }
+
+            if (gameId === 'xo-game') {
+                resetXOGame();
+            }
+        }
+
+        // === İLAN OYUNUNUN KODLARI ===
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const scoreElement = document.getElementById("score");
+        const gameOverScreen = document.getElementById("gameOverScreen");
+
+        const gridSize = 20;
+        const tileCount = canvas.width / gridSize;
+
+        let snake = [{x: 10, y: 10}];
+        let food = {x: 5, y: 5};
+        let dx = 1; let dy = 0; let score = 0;
+        let snakeInterval = null;
+
+        document.addEventListener("keydown", changeDirection);
+
+        function startSnakeGame() {
+            if (!snakeInterval && !isGameOver) {
+                snakeInterval = setInterval(updateSnake, 100);
+            }
+        }
+
+        function stopSnakeGame() {
+            clearInterval(snakeInterval);
+            snakeInterval = null;
+        }
+
+        function updateSnake() {
+            const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+
+            if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+                snakeGameOver(); return;
+            }
+
+            for (let i = 0; i < snake.length; i++) {
+                if (snake[i].x === head.x && snake[i].y === head.y) {
+                    snakeGameOver(); return;
+                }
+            }
+
+            snake.unshift(head);
+
+            if (head.x === food.x && head.y === food.y) {
+                score += 10;
+                scoreElement.innerText = score;
+                generateFood();
+            } else {
+                snake.pop();
+            }
+
+            drawSnakeGame();
+        }
+
+        function drawSnakeGame() {
+            ctx.fillStyle = "#000000";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = "#00ffcc";
+            snake.forEach((part, index) => {
+                ctx.fillStyle = index === 0 ? "#00ffaa" : "#00b38f";
+                ctx.fillRect(part.x * gridSize, part.y * gridSize, gridSize - 2, gridSize - 2);
+            });
+
+            ctx.fillStyle = "#ff4444";
+            ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize - 2, gridSize - 2);
+        }
+
+        function generateFood() {
+            food.x = Math.floor(Math.random() * tileCount);
+            food.y = Math.floor(Math.random() * tileCount);
+        }
+
+        function changeDirection(event) {
+            if (isGameOver) return;
+            const key = event.keyCode;
+            processDirection(key);
+        }
+
+        // Mobil düymələr üçün funksiya
+        function handleJoystick(keyCode) {
+            if (isGameOver) return;
+            processDirection(keyCode);
+        }
+
+        // Hərəkət məntiqini birləşdirdik
+        function processDirection(key) {
+            if (key === 37 && dx === 0) { dx = -1; dy = 0; } // Sol
+            if (key === 38 && dy === 0) { dx = 0; dy = -1; } // Yuxarı
+            if (key === 39 && dx === 0) { dx = 1; dy = 0; }  // Sağ
+            if (key === 40 && dy === 0) { dx = 0; dy = 1; }  // Aşağı
+        }
+
+        function snakeGameOver() {
+            stopSnakeGame();
+            isGameOver = true;
+            gameOverScreen.style.display = "flex";
+        }
+
+        function resetSnakeGame() {
+            stopSnakeGame();
+            isGameOver = false;
+            gameOverScreen.style.display = "none";
+            snake = [{x: 10, y: 10}];
+            dx = 1; dy = 0; score = 0;
+            scoreElement.innerText = score;
+            generateFood();
+            drawSnakeGame();
+            startSnakeGame();
+        }
+
+        // === TIC-TAC-TOE (X-O) KODLARI ===
+        let xoBoard = ["", "", "", "", "", "", "", "", ""];
+        let xoCurrentPlayer = "X";
+        let xoGameActive = true;
+        let xoMode = "2p";
+        const xoStatus = document.getElementById("xo-status");
+        const xoCells = document.querySelectorAll(".xo-cell");
+
+        const winningConditions = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
+        ];
+
+        function setXOMode(mode) {
+            xoMode = mode;
+            document.getElementById("btn-p2p").classList.toggle("active", mode === "2p");
+            document.getElementById("btn-bot").classList.toggle("active", mode === "bot");
+            resetXOGame();
+        }
+
+        function handleXOClick(index) {
+            if (xoBoard[index] !== "" || !xoGameActive) return;
+
+            executeXOMove(index, xoCurrentPlayer);
+
+            if (xoGameActive && xoMode === "bot" && xoCurrentPlayer === "O") {
+                setTimeout(botMove, 400);
+            }
+        }
+
+        function executeXOMove(index, player) {
+            xoBoard[index] = player;
+            xoCells[index].innerText = player;
+            xoCells[index].classList.add(player);
+
+            checkXOResult();
+
+            if (xoGameActive) {
+                xoCurrentPlayer = xoCurrentPlayer === "X" ? "O" : "X";
+                xoStatus.innerText = `Növbə: ${xoCurrentPlayer}`;
+            }
+        }
+
+        function botMove() {
+            if (!xoGameActive) return;
+            let emptyCells = [];
+            for (let i = 0; i < xoBoard.length; i++) {
+                if (xoBoard[i] === "") emptyCells.push(i);
+            }
+            if (emptyCells.length > 0) {
+                const randomIndex = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+                executeXOMove(randomIndex, "O");
+            }
+        }
+
+        function checkXOResult() {
+            let roundWon = false;
+            for (let i = 0; i < winningConditions.length; i++) {
+                const winCondition = winningConditions[i];
+                let a = xoBoard[winCondition[0]];
+                let b = xoBoard[winCondition[1]];
+                let c = xoBoard[winCondition[2]];
+                if (a === "" || b === "" || c === "") continue;
+                if (a === b && b === c) {
+                    roundWon = true; break;
+                }
+            }
+
+            if (roundWon) {
+                xoStatus.innerText = `Qalib: ${xoCurrentPlayer}! 🎉`;
+                xoGameActive = false; return;
+            }
+
+            let roundDraw = !xoBoard.includes("");
+            if (roundDraw) {
+                xoStatus.innerText = "Heç-heçə! 🤝";
+                xoGameActive = false; return;
+            }
+        }
+
+        function resetXOGame() {
+            xoBoard = ["", "", "", "", "", "", "", "", ""];
+            xoCurrentPlayer = "X";
+            xoGameActive = true;
+            xoStatus.innerText = "Növbə: X";
+            xoCells.forEach(cell => {
+                cell.innerText = "";
+                cell.classList.remove("X", "O");
+            });
+        }
+
+        startSnakeGame();
+    </script>
+</body>
+</html>
